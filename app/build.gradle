@@ -1,0 +1,100 @@
+apply plugin: 'maven'
+apply plugin: 'signing'
+apply plugin: 'com.android.library'
+
+String groupId = "com.github.zambelz48"
+String artifactId = "AndroidCommonUtilities"
+String version = "1.0.0-Beta"
+
+android {
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 22
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:22.1.1'
+    compile "com.android.support:support-v4:22.1.1"
+}
+
+task androidJavadocs(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task androidJavadocsJar(type: Jar, dependsOn: androidJavadocs) {
+    classifier = 'javadoc'
+    from androidJavadocs.destinationDir
+}
+
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives androidSourcesJar
+    archives androidJavadocsJar
+}
+
+signing {
+    sign configurations.archives
+}
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                authentication(userName: ossrhUsername, password: ossrhPassword)
+            }
+
+            pom.project {
+                name 'Android Common Utilities'
+                packaging 'jar'
+                // optionally artifactId can be defined here
+                description 'Android common utilities library'
+                url 'https://github.com/zambelz48/AndroidCommonUtilities'
+
+                scm {
+                    connection 'scm:git:git@github.com:zambelz48/AndroidCommonUtilities.git'
+                    developerConnection 'scm:git:git@github.com:zambelz48/AndroidCommonUtilities.git'
+                    url 'git@github.com:zambelz48/AndroidCommonUtilities.git'
+                }
+
+                licenses {
+                    license {
+                        name 'GNU General Public License v2.0'
+                        url 'https://github.com/zambelz48/AndroidCommonUtilities/blob/master/LICENSE'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id 'nanda'
+                        name 'Nanda Julianda Akbar'
+                        email 'nanda.julianda48@gmail.com'
+                    }
+                }
+            }
+        }
+    }
+}
